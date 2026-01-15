@@ -106,10 +106,22 @@ struct InstallCommand {
         
         if !FileManager.default.fileExists(atPath: mainGoPath) {
             print("Error: main.go not found in project root")
+            print("  Looked for: \(mainGoPath)")
             return false
         }
         
-        let (output, exitCode) = runCommand("go", arguments: ["build", "-o", binaryPath, "main.go"], workingDirectory: projectRoot)
+        // Find go binary path
+        let (goPath, goPathExitCode) = runShellCommand("which go")
+        guard goPathExitCode == 0, !goPath.isEmpty else {
+            print("Error: Go binary not found in PATH")
+            return false
+        }
+        
+        let goBinary = goPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Build using shell command to ensure proper PATH and working directory
+        let buildCommand = "cd '\(projectRoot)' && '\(goBinary)' build -o '\(binaryPath)' main.go"
+        let (output, exitCode) = runShellCommand(buildCommand)
         
         if exitCode != 0 {
             print("Error: Failed to build server")

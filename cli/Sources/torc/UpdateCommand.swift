@@ -170,7 +170,19 @@ struct UpdateCommand {
         
         // Build server
         print("  Building server...")
-        let (output, exitCode) = runCommand("go", arguments: ["build", "-o", serverBinaryPath, "main.go"], workingDirectory: root)
+        
+        // Find go binary path
+        let (goPath, goPathExitCode) = runShellCommand("which go")
+        guard goPathExitCode == 0, !goPath.isEmpty else {
+            print("  Error: Go binary not found in PATH")
+            return false
+        }
+        
+        let goBinary = goPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Build using shell command to ensure proper PATH and working directory
+        let buildCommand = "cd '\(root)' && '\(goBinary)' build -o '\(serverBinaryPath)' main.go"
+        let (output, exitCode) = runShellCommand(buildCommand)
         
         if exitCode != 0 {
             print("  Error: Failed to build server")
