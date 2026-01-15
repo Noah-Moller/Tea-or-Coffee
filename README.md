@@ -7,15 +7,17 @@ Swift-based CLI tool for installing and managing the Tea or Coffee server on mac
 **Install the CLI with one command:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/noah-moller/tea-or-coffee/main/cli/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Noah-Moller/tea-or-coffee/main/cli/install.sh | bash
 ```
 
 This downloads the pre-built binary for your platform and installs it to `/usr/local/bin/torc`.
 
+**Note:** All `torc` commands require `sudo` privileges for installation and service management.
+
 **Then install the server:**
 
 ```bash
-torc install
+sudo torc install
 ```
 
 ## Building from Source
@@ -47,8 +49,10 @@ See [BUILD.md](BUILD.md) for instructions on building distributable binaries.
 Install and start the Tea or Coffee server:
 
 ```bash
-torc install
+sudo torc install
 ```
+
+**Note:** Requires sudo privileges for installing binaries and setting up system services.
 
 This will:
 - Check for Go installation
@@ -71,8 +75,10 @@ torc status
 Interactively edit the menu items:
 
 ```bash
-torc update-menu
+sudo torc update-menu
 ```
+
+**Note:** Requires sudo privileges to modify the menu file in the installation directory.
 
 Options:
 - `[a]` Add a new menu item
@@ -83,13 +89,23 @@ Options:
 
 ### Uninstall
 
-Remove the server installation:
+Remove the server installation (and optionally the CLI):
 
 ```bash
-torc uninstall
+sudo torc uninstall
 ```
 
-**Note:** This preserves session data (`Sessions/`) and popular items stats (`popular.json`).
+**Note:** Requires sudo privileges. This preserves session data (`Sessions/`) and popular items stats (`popular.json`).
+
+### Update
+
+Update both the CLI and server to the latest version:
+
+```bash
+sudo torc update
+```
+
+**Note:** Requires sudo privileges to update binaries and restart services.
 
 ## Requirements
 

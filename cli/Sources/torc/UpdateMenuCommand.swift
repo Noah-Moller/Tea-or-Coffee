@@ -163,15 +163,38 @@ struct UpdateMenuCommand {
         // Save in the same format as the original (with quotes and commas)
         let content = items.map { "\"\($0)\"," }.joined(separator: "\n") + "\n"
         
-        do {
-            // Ensure directory exists
-            let dir = (path as NSString).deletingLastPathComponent
-            try ensureDirectoryExists(dir)
-            
-            try content.write(toFile: path, atomically: true, encoding: .utf8)
-        } catch {
-            print("Error: Failed to save menu: \(error.localizedDescription)")
-            exit(1)
+        // Check if path requires sudo (in /opt or /usr/local)
+        let needsSudo = path.hasPrefix("/opt/") || path.hasPrefix("/usr/local/")
+        
+        if needsSudo {
+            // Write to temp file first, then move with sudo
+            let tempFile = "/tmp/torc-menu-\(UUID().uuidString).txt"
+            do {
+                try content.write(toFile: tempFile, atomically: true, encoding: .utf8)
+                
+                // Move with sudo
+                let (output, exitCode) = runShellCommand("sudo mv '\(tempFile)' '\(path)' && sudo chmod 644 '\(path)'")
+                if exitCode != 0 {
+                    print("Error: Failed to save menu (may need sudo)")
+                    print(output)
+                    try? FileManager.default.removeItem(atPath: tempFile)
+                    exit(1)
+                }
+            } catch {
+                print("Error: Failed to save menu: \(error.localizedDescription)")
+                exit(1)
+            }
+        } else {
+            do {
+                // Ensure directory exists
+                let dir = (path as NSString).deletingLastPathComponent
+                try ensureDirectoryExists(dir)
+                
+                try content.write(toFile: path, atomically: true, encoding: .utf8)
+            } catch {
+                print("Error: Failed to save menu: \(error.localizedDescription)")
+                exit(1)
+            }
         }
     }
 }

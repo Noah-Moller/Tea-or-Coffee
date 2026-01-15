@@ -51,11 +51,13 @@ func printHelp() {
         help          Show this help message
     
     EXAMPLES:
-        torc install
+        sudo torc install
         torc status
-        torc update-menu
-        torc uninstall
-        torc update
+        sudo torc update-menu
+        sudo torc uninstall
+        sudo torc update
+    
+    NOTE: Most commands require sudo privileges for installation and service management.
     """)
 }
 
