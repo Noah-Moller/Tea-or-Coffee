@@ -119,14 +119,42 @@ struct InstallCommand {
         
         let goBinary = goPath.trimmingCharacters(in: .whitespacesAndNewlines)
         
+        // Build to temp location first (since /usr/local/bin requires sudo)
+        let tempBinary = "/tmp/torc-server-\(UUID().uuidString)"
+        
         // Build using shell command to ensure proper PATH and working directory
-        let buildCommand = "cd '\(projectRoot)' && '\(goBinary)' build -o '\(binaryPath)' main.go"
+        let buildCommand = "cd '\(projectRoot)' && '\(goBinary)' build -o '\(tempBinary)' main.go"
         let (output, exitCode) = runShellCommand(buildCommand)
         
         if exitCode != 0 {
             print("Error: Failed to build server")
             print(output)
             return false
+        }
+        
+        // Move to final location (may need sudo)
+        if os == .macOS {
+            // Try without sudo first
+            let (_, moveExitCode) = runShellCommand("mv '\(tempBinary)' '\(binaryPath)'")
+            if moveExitCode != 0 {
+                // Try with sudo
+                let (sudoOutput, sudoExitCode) = runShellCommand("sudo mv '\(tempBinary)' '\(binaryPath)'")
+                if sudoExitCode != 0 {
+                    print("Error: Failed to install server binary (may need sudo)")
+                    print(sudoOutput)
+                    try? FileManager.default.removeItem(atPath: tempBinary)
+                    return false
+                }
+            }
+        } else {
+            // Linux: need sudo
+            let (sudoOutput, sudoExitCode) = runShellCommand("sudo mv '\(tempBinary)' '\(binaryPath)' && sudo chmod +x '\(binaryPath)'")
+            if sudoExitCode != 0 {
+                print("Error: Failed to install server binary (may need sudo)")
+                print(sudoOutput)
+                try? FileManager.default.removeItem(atPath: tempBinary)
+                return false
+            }
         }
         
         print("✓ Server built successfully")

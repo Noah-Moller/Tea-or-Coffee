@@ -180,14 +180,42 @@ struct UpdateCommand {
         
         let goBinary = goPath.trimmingCharacters(in: .whitespacesAndNewlines)
         
+        // Build to temp location first (since /usr/local/bin requires sudo)
+        let tempBinary = "/tmp/torc-server-update-\(UUID().uuidString)"
+        
         // Build using shell command to ensure proper PATH and working directory
-        let buildCommand = "cd '\(root)' && '\(goBinary)' build -o '\(serverBinaryPath)' main.go"
+        let buildCommand = "cd '\(root)' && '\(goBinary)' build -o '\(tempBinary)' main.go"
         let (output, exitCode) = runShellCommand(buildCommand)
         
         if exitCode != 0 {
             print("  Error: Failed to build server")
             print("  \(output)")
             return false
+        }
+        
+        // Move to final location (may need sudo)
+        if os == .macOS {
+            // Try without sudo first
+            let (_, moveExitCode) = runShellCommand("mv '\(tempBinary)' '\(serverBinaryPath)'")
+            if moveExitCode != 0 {
+                // Try with sudo
+                let (sudoOutput, sudoExitCode) = runShellCommand("sudo mv '\(tempBinary)' '\(serverBinaryPath)'")
+                if sudoExitCode != 0 {
+                    print("  Error: Failed to install server binary (may need sudo)")
+                    print("  \(sudoOutput)")
+                    try? FileManager.default.removeItem(atPath: tempBinary)
+                    return false
+                }
+            }
+        } else {
+            // Linux: need sudo
+            let (sudoOutput, sudoExitCode) = runShellCommand("sudo mv '\(tempBinary)' '\(serverBinaryPath)' && sudo chmod +x '\(serverBinaryPath)'")
+            if sudoExitCode != 0 {
+                print("  Error: Failed to install server binary (may need sudo)")
+                print("  \(sudoOutput)")
+                try? FileManager.default.removeItem(atPath: tempBinary)
+                return false
+            }
         }
         
         // Restart service
