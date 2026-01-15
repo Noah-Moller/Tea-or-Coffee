@@ -1,0 +1,18 @@
+// swift-tools-version: 6.2
+import PackageDescription
+
+let package = Package(
+    name: "torc",
+    platforms: [
+        .macOS(.v13)
+    ],
+    products: [
+        .executable(name: "torc", targets: ["torc"])
+    ],
+    targets: [
+        .executableTarget(
+            name: "torc",
+            dependencies: []
+        )
+    ]
+)

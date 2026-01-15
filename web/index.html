@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Coffee Orders</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <!-- Header with cart button -->
+      <header class="app-header">
+        <h1>Coffee Shop</h1>
+        <button id="cart-button" class="cart-button" aria-label="View cart">
+          <span id="cart-count" class="cart-count">0</span>
+          🛒
+        </button>
+      </header>
+
+      <!-- Popular items section -->
+      <section id="popular-section" class="section" style="display: none;">
+        <h2 class="section-title">Popular</h2>
+        <div id="popular-grid" class="drink-grid"></div>
+      </section>
+
+      <!-- Menu section -->
+      <section class="section">
+        <h2 class="section-title">Menu</h2>
+        <div id="menu-grid" class="drink-grid"></div>
+      </section>
+
+      <!-- Cart sidebar -->
+      <aside id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+          <h2>Your Cart</h2>
+          <button id="close-cart" class="close-button" aria-label="Close cart">×</button>
+        </div>
+        <div id="cart-items" class="cart-items"></div>
+        <div class="cart-footer">
+          <div class="cart-total">
+            <span>Total items:</span>
+            <span id="cart-total-count">0</span>
+          </div>
+          <button id="checkout-button" class="primary-button" disabled>Checkout</button>
+        </div>
+      </aside>
+
+      <!-- Checkout modal -->
+      <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+          <h2>Checkout</h2>
+          <form id="checkout-form" class="form">
+            <label class="field">
+              <span class="field-label">Your name</span>
+              <input
+                id="customer-name"
+                type="text"
+                required
+                placeholder="e.g. Alex"
+              />
+            </label>
+            <div class="checkout-actions">
+              <button type="button" id="cancel-checkout" class="secondary-button">Cancel</button>
+              <button type="submit" class="primary-button">Place order</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Item detail modal -->
+      <div id="item-modal" class="modal">
+        <div class="modal-content">
+          <h2 id="item-modal-title">Add to cart</h2>
+          <form id="item-form" class="form">
+            <input type="hidden" id="item-drink" />
+            <label class="field">
+              <span class="field-label">Special instructions</span>
+              <textarea
+                id="item-instructions"
+                rows="4"
+                placeholder="e.g. Extra hot, oat milk, no sugar"
+              ></textarea>
+            </label>
+            <div class="checkout-actions">
+              <button type="button" id="cancel-item" class="secondary-button">Cancel</button>
+              <button type="submit" class="primary-button">Add to cart</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Status message -->
+      <div id="status-toast" class="toast" aria-live="polite"></div>
+    </main>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Coffee Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="card card--admin">
+        <h1>Admin – Sessions &amp; Orders</h1>
+        <p class="subtitle">
+          Manage sessions and inspect all orders. This portal runs on port 9090.
+        </p>
+
+        <section class="admin-section">
+          <header class="admin-section__header">
+            <h2>Sessions</h2>
+            <span id="current-session" class="badge">Current: none</span>
+          </header>
+
+          <div class="admin-actions">
+            <button id="create-session" class="primary-button">Create session</button>
+            <button id="refresh-sessions" class="secondary-button">Refresh</button>
+          </div>
+
+          <ul id="sessions-list" class="session-list"></ul>
+        </section>
+
+        <section class="admin-section">
+          <header class="admin-section__header">
+            <h2>Orders</h2>
+            <span id="orders-session-label" class="badge badge--muted">No session selected</span>
+          </header>
+
+          <ul id="orders-list" class="orders-list"></ul>
+        </section>
+
+        <section class="admin-section">
+          <header class="admin-section__header">
+            <h2>Popular items</h2>
+          </header>
+
+          <ul id="popular-list" class="orders-list"></ul>
+        </section>
+
+        <p id="status" class="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+  </html>
+
