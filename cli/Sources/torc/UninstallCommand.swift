@@ -3,8 +3,12 @@ import Foundation
 struct UninstallCommand {
     let os = detectOS()
     
-    var binaryPath: String {
+    var serverBinaryPath: String {
         os == .macOS ? "/usr/local/bin/torc-server" : "/usr/local/bin/torc-server"
+    }
+    
+    var cliBinaryPath: String {
+        os == .macOS ? "/usr/local/bin/torc" : "/usr/local/bin/torc"
     }
     
     var appRoot: String {
@@ -12,28 +16,43 @@ struct UninstallCommand {
     }
     
     func run() {
-        print("Uninstall Tea or Coffee Server")
+        print("Uninstall Tea or Coffee")
         print("=" + String(repeating: "=", count: 30))
         print()
         
-        // Check if installed
-        let isInstalled = checkInstalled()
+        // Check what's installed
+        let serverInstalled = checkServerInstalled()
+        let cliInstalled = checkCLIInstalled()
         
-        if !isInstalled {
-            print("Server does not appear to be installed.")
+        if !serverInstalled && !cliInstalled {
+            print("Nothing appears to be installed.")
             return
         }
         
-        // Confirm
+        // Show what will be removed
+        var itemsToRemove: [String] = []
+        if serverInstalled {
+            itemsToRemove.append("  - Stop and remove the server service")
+            itemsToRemove.append("  - Remove the server binary")
+            itemsToRemove.append("  - Remove server installation files")
+        }
+        if cliInstalled {
+            itemsToRemove.append("  - Remove the CLI binary (torc)")
+        }
+        
         print("This will:")
-        print("  - Stop and remove the service")
-        print("  - Remove the server binary")
-        print("  - Remove installation files")
+        for item in itemsToRemove {
+            print(item)
+        }
         print()
-        print("⚠️  WARNING: This will NOT delete:")
-        print("  - Session data (Sessions/ directory)")
-        print("  - Popular items stats (popular.json)")
-        print()
+        
+        if serverInstalled {
+            print("⚠️  WARNING: This will NOT delete:")
+            print("  - Session data (Sessions/ directory)")
+            print("  - Popular items stats (popular.json)")
+            print()
+        }
+        
         print("Do you want to continue? (yes/no): ", terminator: "")
         
         guard let response = readLine()?.trimmingCharacters(in: .whitespaces).lowercased(),
@@ -44,22 +63,92 @@ struct UninstallCommand {
         
         print()
         
-        // Stop service
-        print("Stopping service...")
-        stopService()
+        // Uninstall server if installed
+        if serverInstalled {
+            // Stop service
+            print("Stopping service...")
+            stopService()
+            
+            // Remove service
+            print("Removing service...")
+            removeService()
+            
+            // Remove server binary
+            print("Removing server binary...")
+            if FileManager.default.fileExists(atPath: serverBinaryPath) {
+                do {
+                    try FileManager.default.removeItem(atPath: serverBinaryPath)
+                    print("✓ Server binary removed")
+                } catch {
+                    print("Warning: Failed to remove server binary: \(error.localizedDescription)")
+                    // Try with sudo on Linux
+                    if os == .linux {
+                        let (_, exitCode) = runShellCommand("sudo rm \(serverBinaryPath)")
+                        if exitCode == 0 {
+                            print("✓ Server binary removed (with sudo)")
+                        }
+                    }
+                }
+            }
+            
+            // Remove app root (but keep Sessions and popular.json if they exist)
+            print("Removing installation files...")
+            if FileManager.default.fileExists(atPath: appRoot) {
+                let fileManager = FileManager.default
+                let appRootURL = URL(fileURLWithPath: appRoot)
+                
+                do {
+                    let contents = try fileManager.contentsOfDirectory(at: appRootURL, includingPropertiesForKeys: nil)
+                    
+                    for item in contents {
+                        let itemName = item.lastPathComponent
+                        // Keep Sessions and popular.json
+                        if itemName != "Sessions" && itemName != "popular.json" {
+                            try? fileManager.removeItem(at: item)
+                        }
+                    }
+                    
+                    // If only Sessions and popular.json remain, keep the directory
+                    let remaining = try fileManager.contentsOfDirectory(at: appRootURL, includingPropertiesForKeys: nil)
+                    if remaining.count <= 2 {
+                        print("✓ Kept Sessions/ and popular.json")
+                    } else {
+                        // Remove everything else
+                        for item in remaining {
+                            if item.lastPathComponent != "Sessions" && item.lastPathComponent != "popular.json" {
+                                try? fileManager.removeItem(at: item)
+                            }
+                        }
+                    }
+                    
+                    print("✓ Installation files removed")
+                } catch {
+                    print("Warning: Failed to remove some files: \(error.localizedDescription)")
+                }
+            }
+        }
         
-        // Remove service
-        print("Removing service...")
-        removeService()
-        
-        // Remove binary
-        print("Removing binary...")
-        if FileManager.default.fileExists(atPath: binaryPath) {
-            do {
-                try FileManager.default.removeItem(atPath: binaryPath)
-                print("✓ Binary removed")
-            } catch {
-                print("Warning: Failed to remove binary: \(error.localizedDescription)")
+        // Remove CLI if installed
+        if cliInstalled {
+            print("Removing CLI binary...")
+            if FileManager.default.fileExists(atPath: cliBinaryPath) {
+                do {
+                    try FileManager.default.removeItem(atPath: cliBinaryPath)
+                    print("✓ CLI binary removed")
+                } catch {
+                    print("Warning: Failed to remove CLI binary: \(error.localizedDescription)")
+                    // Try with sudo on Linux
+                    if os == .linux {
+                        let (_, exitCode) = runShellCommand("sudo rm \(cliBinaryPath)")
+                        if exitCode == 0 {
+                            print("✓ CLI binary removed (with sudo)")
+                        } else {
+                            print("Error: Could not remove CLI binary. You may need to run: sudo rm \(cliBinaryPath)")
+                        }
+                    } else {
+                        print("Error: Could not remove CLI binary. You may need to run: rm \(cliBinaryPath)")
+                    }
+                }
             }
         }
         
@@ -102,18 +191,31 @@ struct UninstallCommand {
         print()
         print("✓ Uninstall complete!")
         print()
-        print("Note: Session data and popular.json were preserved.")
-        print("To remove them manually, delete:")
-        print("  \(appRoot)/Sessions/")
-        print("  \(appRoot)/popular.json")
+        
+        if serverInstalled {
+            print("Note: Session data and popular.json were preserved.")
+            print("To remove them manually, delete:")
+            print("  \(appRoot)/Sessions/")
+            print("  \(appRoot)/popular.json")
+        }
+        
+        if cliInstalled {
+            print()
+            print("CLI has been removed. To reinstall, run:")
+            print("  curl -fsSL https://raw.githubusercontent.com/Noah-Moller/tea-or-coffee/main/cli/install.sh | bash")
+        }
     }
     
-    func checkInstalled() -> Bool {
+    func checkServerInstalled() -> Bool {
         let serviceExists = os == .macOS ?
             FileManager.default.fileExists(atPath: (NSHomeDirectory() as NSString).appendingPathComponent("Library/LaunchAgents/com.teacoffee.torc.plist")) :
             FileManager.default.fileExists(atPath: "/etc/systemd/system/torc-server.service")
         
-        return serviceExists || FileManager.default.fileExists(atPath: binaryPath) || FileManager.default.fileExists(atPath: appRoot)
+        return serviceExists || FileManager.default.fileExists(atPath: serverBinaryPath) || FileManager.default.fileExists(atPath: appRoot)
+    }
+    
+    func checkCLIInstalled() -> Bool {
+        return FileManager.default.fileExists(atPath: cliBinaryPath)
     }
     
     func stopService() {
