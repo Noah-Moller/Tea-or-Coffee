@@ -125,7 +125,7 @@ See [cli/BUILD.md](cli/BUILD.md) for instructions on building distributable CLI 
 
 ## Requirements
 
-- **Swift 5.9+** (for building the CLI)
+- **Swift 6.2+** (for building the CLI)
 - **Go 1.21+** (for building the server)
 - **macOS 13+** or **Ubuntu Linux**
 - **sudo access** (for systemd service installation on Linux)
