@@ -75,9 +75,13 @@ func main() {
 	go func() {
 		if err := startAdminServer(); err != nil {
 			log.Printf("ERROR: Admin server failed to start: %v", err)
+			fmt.Fprintf(os.Stderr, "ERROR: Admin server failed to start: %v\n", err)
 			// Don't exit - let the main server continue running
 		}
 	}()
+	
+	// Give admin server a moment to start
+	time.Sleep(100 * time.Millisecond)
 
 	fmt.Println("Serving coffee menu on :8080/menu")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
