@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"sort"
@@ -71,7 +72,12 @@ func main() {
 	http.HandleFunc("/orders", handleFetchOrders)
 	http.HandleFunc("/popular", handlePopular)
 
-	go startAdminServer()
+	go func() {
+		if err := startAdminServer(); err != nil {
+			log.Printf("ERROR: Admin server failed to start: %v", err)
+			// Don't exit - let the main server continue running
+		}
+	}()
 
 	fmt.Println("Serving coffee menu on :8080/menu")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
@@ -101,7 +107,7 @@ func getMenu() []string {
 	return menu
 }
 
-func startAdminServer() {
+func startAdminServer() error {
 	adminMux := http.NewServeMux()
 	adminMux.Handle("/", http.FileServer(http.Dir("admin")))
 	adminMux.HandleFunc("/api/sessions", adminHandleSessions)
@@ -110,10 +116,20 @@ func startAdminServer() {
 	adminMux.HandleFunc("/api/orders", adminHandleOrders)
 	adminMux.HandleFunc("/api/popular", adminHandlePopular)
 
-	fmt.Println("Admin portal running on :9090")
-	if err := http.ListenAndServe(":9090", adminMux); err != nil {
-		log.Fatal(err)
+	// Explicitly bind to all interfaces (both IPv4 and IPv6)
+	addr := "0.0.0.0:9090"
+	fmt.Printf("Admin portal starting on %s (all interfaces)\n", addr)
+	
+	// Create listener explicitly to ensure IPv4 binding
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("failed to create listener: %w", err)
 	}
+	
+	if err := http.Serve(listener, adminMux); err != nil {
+		return fmt.Errorf("admin server error: %w", err)
+	}
+	return nil
 }
 
 func handleCreateSession(w http.ResponseWriter, r *http.Request) {
