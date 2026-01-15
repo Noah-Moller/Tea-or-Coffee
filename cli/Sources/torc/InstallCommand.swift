@@ -21,10 +21,32 @@ struct InstallCommand {
         }
         
         // Get project root
-        guard let projectRoot = getProjectRoot() else {
-            print("Error: Could not find project root (main.go not found)")
-            print("Please run this command from the project directory.")
-            exit(1)
+        var projectRoot: String
+        if let foundRoot = getProjectRoot() {
+            projectRoot = foundRoot
+        } else {
+            // Try to clone the repository
+            print("Project not found. Cloning repository...")
+            let cloneDir = os == .macOS ? "/tmp/tea-or-coffee" : "/tmp/tea-or-coffee"
+            
+            // Remove if exists
+            if FileManager.default.fileExists(atPath: cloneDir) {
+                try? FileManager.default.removeItem(atPath: cloneDir)
+            }
+            
+            let (output, exitCode) = runShellCommand("git clone https://github.com/Noah-Moller/tea-or-coffee.git \(cloneDir)")
+            if exitCode != 0 {
+                print("Error: Failed to clone repository")
+                print(output)
+                print()
+                print("Please either:")
+                print("  1. Clone the repository manually: git clone https://github.com/Noah-Moller/tea-or-coffee.git")
+                print("  2. Run 'torc install' from within the project directory")
+                exit(1)
+            }
+            
+            projectRoot = cloneDir
+            print("✓ Repository cloned")
         }
         
         // Build Go server
