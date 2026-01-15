@@ -10,11 +10,11 @@ I built this primarily as a learning project to explore the **Go programming lan
 
 ## Features
 
-- 📱 **Simple Order Interface** - Guests can place orders from any device on your network
-- 🎯 **Session Management** - Organize orders by session (e.g., "Morning Meeting", "Afternoon Break")
-- 📊 **Popular Items Tracking** - See which drinks are ordered most frequently
-- 🛠️ **Easy CLI Management** - Install, update, and manage the server with simple commands
-- 🔧 **Cross-Platform** - Works on macOS and Linux
+- **Simple Order Interface** - Guests can place orders from any device on your network
+- **Session Management** - Organize orders by session (e.g., "Morning Meeting", "Afternoon Break")
+- **Popular Items Tracking** - See which drinks are ordered most frequently
+- **Easy CLI Management** - Install, update, and manage the server with simple commands
+- **Cross-Platform** - Works on macOS and Linux
 
 ## Quick Start
 
