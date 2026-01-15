@@ -120,15 +120,22 @@ func startAdminServer() error {
 	adminMux.HandleFunc("/api/orders", adminHandleOrders)
 	adminMux.HandleFunc("/api/popular", adminHandlePopular)
 
-	// Explicitly bind to all interfaces (both IPv4 and IPv6)
-	addr := "0.0.0.0:9090"
-	fmt.Printf("Admin portal starting on %s (all interfaces)\n", addr)
+	// Try to bind to IPv4 first, then IPv6 if that fails
+	// This ensures external IPv4 connections work
+	addr4 := "0.0.0.0:9090"
+	fmt.Printf("Admin portal starting on %s (IPv4)\n", addr4)
 	
-	// Create listener explicitly to ensure IPv4 binding
-	listener, err := net.Listen("tcp", addr)
+	listener, err := net.Listen("tcp4", addr4)
 	if err != nil {
-		return fmt.Errorf("failed to create listener: %w", err)
+		// Fallback to dual-stack if IPv4-only fails
+		fmt.Printf("IPv4-only bind failed, trying dual-stack: %v\n", err)
+		listener, err = net.Listen("tcp", ":9090")
+		if err != nil {
+			return fmt.Errorf("failed to create listener: %w", err)
+		}
 	}
+	
+	fmt.Printf("Admin portal listening on %s\n", listener.Addr().String())
 	
 	if err := http.Serve(listener, adminMux); err != nil {
 		return fmt.Errorf("admin server error: %w", err)
