@@ -4,7 +4,7 @@ set -e
 # Install script for torc CLI
 # Downloads the appropriate binary from GitHub Releases and installs it
 
-REPO_OWNER="${REPO_OWNER:-your-github-username}"
+REPO_OWNER="${REPO_OWNER:-Noah-Moller}"
 REPO_NAME="${REPO_NAME:-tea-or-coffee}"
 VERSION="${VERSION:-latest}"
 
