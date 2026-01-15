@@ -5,6 +5,7 @@ enum Command {
     case status
     case updateMenu
     case uninstall
+    case update
     case help
 }
 
@@ -23,6 +24,8 @@ func parseArguments(_ args: [String]) -> Command {
         return .updateMenu
     case "uninstall":
         return .uninstall
+    case "update":
+        return .update
     case "help", "--help", "-h":
         return .help
     default:
@@ -44,6 +47,7 @@ func printHelp() {
         status        Show server status and access URLs
         update-menu   Edit the menu items
         uninstall     Remove the server installation
+        update        Update the CLI and server to latest version
         help          Show this help message
     
     EXAMPLES:
@@ -51,6 +55,7 @@ func printHelp() {
         torc status
         torc update-menu
         torc uninstall
+        torc update
     """)
 }
 
@@ -67,6 +72,8 @@ func main() {
         UpdateMenuCommand().run()
     case .uninstall:
         UninstallCommand().run()
+    case .update:
+        UpdateCommand().run()
     case .help:
         printHelp()
     }
