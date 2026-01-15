@@ -44,8 +44,13 @@ INSTALL_PATH="/usr/local/bin/torc"
 if [ "$VERSION" = "latest" ]; then
     # Try to get latest release
     if command -v curl >/dev/null 2>&1; then
-        LATEST_TAG=$(curl -s "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' || echo "v0.1.0")
-        VERSION="$LATEST_TAG"
+        LATEST_TAG=$(curl -s "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest" 2>/dev/null | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' || echo "")
+        if [ -n "$LATEST_TAG" ]; then
+            VERSION="$LATEST_TAG"
+        else
+            echo "Warning: Could not determine latest version, defaulting to v0.1.0"
+            VERSION="v0.1.0"
+        fi
     else
         VERSION="v0.1.0"
     fi
